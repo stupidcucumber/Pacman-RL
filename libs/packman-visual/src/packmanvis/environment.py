@@ -1,5 +1,4 @@
 import enum
-from packmanvis.types.labirinth
 
 
 class LevelDifficulty(enum.IntEnum):
