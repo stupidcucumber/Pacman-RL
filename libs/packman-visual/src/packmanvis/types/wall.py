@@ -1,10 +1,6 @@
-import enum
 from PyQt6.QtGui import QPixmap
 
-
-class WallType(enum.StrEnum):
-    VERTICAL_OPENED: str = "packmanvis/assets/s_wall/0.png"
-    
+from .wall_type import WallType
 
 
 class Wall:
