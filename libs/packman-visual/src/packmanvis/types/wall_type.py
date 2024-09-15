@@ -7,7 +7,7 @@ import numpy as np
 PREFIX = "wall_sprite"
 
 
-class WallType(enum.StrEnum):
+class WallType(enum.Enum):
     """Enum class responsible for mapping
     sprite of the wall to the Wall object.
 
@@ -304,7 +304,7 @@ class WallType(enum.StrEnum):
     ) -> tuple[bool, WallType, int]:
         if any([WallType._y_on_down_border(layout, y)]):
             return False, None, 0
-        return all([layout[y + 1, x]]), WallType.HORIZONTAL_RIGHT_CLOSED, 10
+        return all([layout[y + 1, x]]), WallType.VERTICAL_UP_CLOSED, 10
 
     @staticmethod
     def _infer_wall_type_VERTICAL_DOWN_CLOSED(
@@ -312,7 +312,7 @@ class WallType(enum.StrEnum):
     ) -> tuple[bool, WallType, int]:
         if any([y == 0]):
             return False, None, 0
-        return all([layout[y - 1, x]]), WallType.HORIZONTAL_LEFT_CLOSED, 10
+        return all([layout[y - 1, x]]), WallType.VERTICAL_DOWN_CLOSED, 10
 
     @staticmethod
     def infer(layout: np.ndarray, x: int, y: int) -> WallType:
