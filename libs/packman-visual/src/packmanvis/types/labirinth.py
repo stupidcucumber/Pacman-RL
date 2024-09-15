@@ -4,6 +4,7 @@ import numpy as np
 from packmanvis.algorithms.maze import generate_maze, strave_maze
 from packmanvis.types.mobs import Mob
 
+from .coin import Coin
 from .wall import Wall
 from .wall_type import WallType
 
@@ -22,7 +23,7 @@ class Labirinth:
                 row.append(
                     Wall(type=WallType.infer(layout=layout, x=x_index, y=y_index))
                     if x == 1
-                    else []
+                    else [Coin()]
                 )
             result.append(row)
         return result
