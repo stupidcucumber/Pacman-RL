@@ -1,7 +1,7 @@
 from packmanvis.core.widgets.animate import AnimatedWidget
 from packmanvis.core.widgets.path import PlaceholderWidget
 from packmanvis.core.widgets.wall import WallWidget
-from packmanvis.types.entity import Animated
+from packmanvis.types.animated import Animated
 from packmanvis.types.labirinth import Labirinth
 from packmanvis.types.wall import Wall
 from PyQt6.QtWidgets import QGridLayout, QWidget

@@ -1,4 +1,4 @@
-from packmanvis.types.entity import Animated
+from packmanvis.types.animated import Animated
 from PyQt6.QtGui import QMovie, QShowEvent
 from PyQt6.QtWidgets import QLabel, QWidget
 

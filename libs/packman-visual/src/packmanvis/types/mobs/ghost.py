@@ -1,6 +1,6 @@
-from packmanvis.types.mobs.mob import Mob
-from pathlib import Path
 import enum
+
+from packmanvis.types.mobs.mob import Mob
 
 
 class GhostColor(enum.Enum):
@@ -14,6 +14,6 @@ class GhostColor(enum.Enum):
 
 
 class Ghost(Mob):
-    def __init__(self, fsprite: Path, color: GhostColor) -> None:
-        super(Ghost, self).__init__(fsprite=fsprite)
+    def __init__(self, gif: str, color: GhostColor) -> None:
+        super(Ghost, self).__init__(gif=gif)
         self.color = color

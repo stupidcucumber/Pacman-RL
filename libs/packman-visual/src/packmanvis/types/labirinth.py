@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 from packmanvis.algorithms.maze import generate_pacmanlike_maze
+from packmanvis.types.items import Coin
 from packmanvis.types.mobs import Mob
 
-from .coin import Coin
 from .wall import Wall
 from .wall_type import WallType
 
@@ -19,6 +19,18 @@ class Labirinth:
         if self.maze is None:
             self.maze = generate_pacmanlike_maze(shape=self.shape)
         return self._map_from_layout(self.maze)
+
+    @staticmethod
+    def _spawn_coins(maze: np.ndarray) -> np.ndarray:
+        pass
+
+    @staticmethod
+    def _spawn_pacman(maze: np.ndarray) -> np.ndarray:
+        pass
+
+    @staticmethod
+    def _spawn_ghosts(maze: np.ndarray) -> np.ndarray:
+        pass
 
     def _map_from_layout(self, layout: np.ndarray) -> list:
         result = []
