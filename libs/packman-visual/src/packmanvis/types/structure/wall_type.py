@@ -4,8 +4,6 @@ import enum
 
 import numpy as np
 
-PREFIX = "wall_sprite"
-
 
 class WallType(enum.Enum):
     """Enum class responsible for mapping
@@ -94,21 +92,21 @@ class WallType(enum.Enum):
     VERTICAL_DOWN_CLOSED: str
     """
 
-    VERTICAL_OPENED: str = f"{PREFIX}:0.png"
-    HORIZONTAL_OPENED: str = f"{PREFIX}:1.png"
-    CROSS: str = f"{PREFIX}:2.png"
-    LEFT_T: str = f"{PREFIX}:3.png"
-    T: str = f"{PREFIX}:4.png"
-    RIGHT_T: str = f"{PREFIX}:5.png"
-    UPSIDE_DOWN_T: str = f"{PREFIX}:6.png"
-    DL_CORNER: str = f"{PREFIX}:7.png"
-    DR_CORNER: str = f"{PREFIX}:8.png"
-    UR_CORNER: str = f"{PREFIX}:9.png"
-    UL_CORNER: str = f"{PREFIX}:10.png"
-    HORIZONTAL_LEFT_CLOSED: str = f"{PREFIX}:11.png"
-    VERTICAL_UP_CLOSED: str = f"{PREFIX}:12.png"
-    HORIZONTAL_RIGHT_CLOSED: str = f"{PREFIX}:13.png"
-    VERTICAL_DOWN_CLOSED: str = f"{PREFIX}:14.png"
+    VERTICAL_OPENED: int = 0
+    HORIZONTAL_OPENED: int = 1
+    CROSS: int = 2
+    LEFT_T: int = 3
+    T: int = 4
+    RIGHT_T: int = 5
+    UPSIDE_DOWN_T: int = 6
+    DL_CORNER: int = 7
+    DR_CORNER: int = 8
+    UR_CORNER: int = 9
+    UL_CORNER: int = 10
+    HORIZONTAL_LEFT_CLOSED: int = 11
+    VERTICAL_UP_CLOSED: int = 12
+    HORIZONTAL_RIGHT_CLOSED: int = 13
+    VERTICAL_DOWN_CLOSED: int = 14
 
     @staticmethod
     def _x_on_right_border(layout: np.ndarray, x: int) -> bool:
@@ -163,7 +161,12 @@ class WallType(enum.Enum):
             return False, None, 0
         return (
             all(
-                [layout[y - 1, x], layout[y + 1, x], layout[y, x - 1], layout[y, x + 1]]
+                [
+                    layout[y - 1, x] == 1,
+                    layout[y + 1, x] == 1,
+                    layout[y, x - 1] == 1,
+                    layout[y, x + 1] == 1,
+                ]
             ),
             WallType.CROSS,
             14,
@@ -182,7 +185,7 @@ class WallType(enum.Enum):
         ):
             return False, None, 0
         return (
-            all([layout[y, x - 1], layout[y, x + 1], layout[y + 1, x]]),
+            all([layout[y, x - 1] == 1, layout[y, x + 1] == 1, layout[y + 1, x] == 1]),
             WallType.T,
             13,
         )
@@ -194,7 +197,7 @@ class WallType(enum.Enum):
         if any([y == 0, x == 0, WallType._x_on_right_border(layout, x)]):
             return False, None, 0
         return (
-            all([layout[y, x - 1], layout[y, x + 1], layout[y - 1, x]]),
+            all([layout[y, x - 1] == 1, layout[y, x + 1] == 1, layout[y - 1, x] == 1]),
             WallType.UPSIDE_DOWN_T,
             13,
         )
@@ -206,7 +209,7 @@ class WallType(enum.Enum):
         if any([x == 0, y == 0, WallType._y_on_down_border(layout, y)]):
             return False, None, 0
         return (
-            all([layout[y - 1, x], layout[y + 1, x], layout[y, x - 1]]),
+            all([layout[y - 1, x] == 1, layout[y + 1, x] == 1, layout[y, x - 1] == 1]),
             WallType.LEFT_T,
             13,
         )
@@ -224,7 +227,7 @@ class WallType(enum.Enum):
         ):
             return False, None, 0
         return (
-            all([layout[y - 1, x], layout[y + 1, x], layout[y, x + 1]]),
+            all([layout[y - 1, x] == 1, layout[y + 1, x] == 1, layout[y, x + 1] == 1]),
             WallType.RIGHT_T,
             13,
         )
@@ -235,7 +238,11 @@ class WallType(enum.Enum):
     ) -> tuple[bool, WallType, int]:
         if any([y == 0, WallType._x_on_right_border(layout, x)]):
             return False, None, 0
-        return all([layout[y - 1, x], layout[y, x + 1]]), WallType.DL_CORNER, 12
+        return (
+            all([layout[y - 1, x] == 1, layout[y, x + 1] == 1]),
+            WallType.DL_CORNER,
+            12,
+        )
 
     @staticmethod
     def _infer_wall_type_DR_CORNER(
@@ -243,7 +250,11 @@ class WallType(enum.Enum):
     ) -> tuple[bool, WallType, int]:
         if any([y == 0, x == 0]):
             return False, None, 0
-        return all([layout[y - 1, x], layout[y, x - 1]]), WallType.DR_CORNER, 12
+        return (
+            all([layout[y - 1, x] == 1, layout[y, x - 1] == 1]),
+            WallType.DR_CORNER,
+            12,
+        )
 
     @staticmethod
     def _infer_wall_type_UR_CORNER(
@@ -251,7 +262,11 @@ class WallType(enum.Enum):
     ) -> tuple[bool, WallType, int]:
         if any([WallType._y_on_down_border(layout, y), x == 0]):
             return False, None, 0
-        return all([layout[y + 1, x], layout[y, x - 1]]), WallType.UR_CORNER, 12
+        return (
+            all([layout[y + 1, x] == 1, layout[y, x - 1] == 1]),
+            WallType.UR_CORNER,
+            12,
+        )
 
     @staticmethod
     def _infer_wall_type_UL_CORNER(
@@ -264,7 +279,11 @@ class WallType(enum.Enum):
             ]
         ):
             return False, None, 0
-        return all([layout[y + 1, x], layout[y, x + 1]]), WallType.UL_CORNER, 12
+        return (
+            all([layout[y + 1, x] == 1, layout[y, x + 1] == 1]),
+            WallType.UL_CORNER,
+            12,
+        )
 
     @staticmethod
     def _infer_wall_type_HORIZONTAL_OPENED(
@@ -272,7 +291,11 @@ class WallType(enum.Enum):
     ) -> tuple[bool, WallType, int]:
         if any([x == 0, WallType._x_on_right_border(layout, x)]):
             return False, None, 0
-        return all([layout[y, x - 1], layout[y, x + 1]]), WallType.HORIZONTAL_OPENED, 11
+        return (
+            all([layout[y, x - 1] == 1, layout[y, x + 1] == 1]),
+            WallType.HORIZONTAL_OPENED,
+            11,
+        )
 
     @staticmethod
     def _infer_wall_type_VERTICAL_OPENED(
@@ -280,7 +303,11 @@ class WallType(enum.Enum):
     ) -> tuple[bool, WallType, int]:
         if any([y == 0, WallType._y_on_down_border(layout, y)]):
             return False, None, 0
-        return all([layout[y - 1, x], layout[y + 1, x]]), WallType.VERTICAL_OPENED, 11
+        return (
+            all([layout[y - 1, x] == 1, layout[y + 1, x] == 1]),
+            WallType.VERTICAL_OPENED,
+            11,
+        )
 
     @staticmethod
     def _infer_wall_type_HORIZONTAL_LEFT_CLOSED(
@@ -288,7 +315,7 @@ class WallType(enum.Enum):
     ) -> tuple[bool, WallType, int]:
         if any([WallType._x_on_right_border(layout, x)]):
             return False, None, 0
-        return all([layout[y, x + 1]]), WallType.HORIZONTAL_LEFT_CLOSED, 10
+        return all([layout[y, x + 1] == 1]), WallType.HORIZONTAL_LEFT_CLOSED, 10
 
     @staticmethod
     def _infer_wall_type_HORIZONTAL_RIGHT_CLOSED(
@@ -296,7 +323,7 @@ class WallType(enum.Enum):
     ) -> tuple[bool, WallType, int]:
         if any([x == 0]):
             return False, None, 0
-        return all([layout[y, x - 1]]), WallType.HORIZONTAL_RIGHT_CLOSED, 10
+        return all([layout[y, x - 1] == 1]), WallType.HORIZONTAL_RIGHT_CLOSED, 10
 
     @staticmethod
     def _infer_wall_type_VERTICAL_UP_CLOSED(
@@ -304,7 +331,7 @@ class WallType(enum.Enum):
     ) -> tuple[bool, WallType, int]:
         if any([WallType._y_on_down_border(layout, y)]):
             return False, None, 0
-        return all([layout[y + 1, x]]), WallType.VERTICAL_UP_CLOSED, 10
+        return all([layout[y + 1, x] == 1]), WallType.VERTICAL_UP_CLOSED, 10
 
     @staticmethod
     def _infer_wall_type_VERTICAL_DOWN_CLOSED(

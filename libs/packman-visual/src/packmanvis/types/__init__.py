@@ -1,5 +1,5 @@
-from .labirinth import Labirinth
-from .wall import Wall
-from .wall_type import WallType
+from .animated import Animated
+from .labyrinth import Labyrinth
+from .structure import Wall, WallType
 
-__all__ = [Labirinth, WallType, Wall]
+__all__ = [Labyrinth, WallType, Wall, Animated]
