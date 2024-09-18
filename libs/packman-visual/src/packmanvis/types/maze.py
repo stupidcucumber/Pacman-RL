@@ -2,6 +2,8 @@ from collections import deque
 from dataclasses import dataclass
 
 import numpy as np
+from packmanvis.algorithms.maze import generate_pacmanlike_maze
+from packmanvis.algorithms.maze.types import EntityWeight
 from packmanvis.types.items import Coin
 from packmanvis.types.mobs import Ghost, GhostType, Mob, Pacman
 from packmanvis.types.mobs.action import Action
@@ -9,10 +11,6 @@ from packmanvis.types.mobs.state import State
 
 from .animated import Animated
 from .structure import Floor, Wall, WallType
-
-COIN_WEIGHT = 2
-PACMAN_WEIGHT = 5
-GHOST_WEIGHT = 13
 
 
 @dataclass
@@ -34,10 +32,11 @@ class Tile:
 
 
 class Maze:
-    def __init__(self, layout: np.ndarray) -> None:
-        self.nrows = layout.shape[0]
-        self.ncols = layout.shape[1]
-        self.tiles: list[Tile] = self._layout_from_map(layout)
+    def __init__(self, shape: tuple[int, int]) -> None:
+        self.layout = generate_pacmanlike_maze(shape=shape)
+        self.nrows = self.layout.shape[0]
+        self.ncols = self.layout.shape[1]
+        self.tiles: list[Tile] = self._layout_from_map(self.layout)
 
     def _move_object(self, obj: Mob, delta_x: int, delta_y: int) -> bool:
         new_pos_x = obj.current_state.pos_x + delta_x
@@ -95,24 +94,24 @@ class Maze:
         weight = layout[y, x]
         ghost_types = deque(GhostType._member_map_.values())
         while weight > 0:
-            if weight - GHOST_WEIGHT >= 0:
+            if weight - EntityWeight.GHOST_WEIGHT >= 0:
                 result.append(
                     self._create_ghost(
                         initial_state=State(pos_x=x, pos_y=y, action=Action.MOVE_UP),
                         type=ghost_types.pop(),
                     )
                 )
-                weight -= GHOST_WEIGHT
-            elif weight - PACMAN_WEIGHT >= 0:
+                weight -= EntityWeight.GHOST_WEIGHT
+            elif weight - EntityWeight.PACMAN_WEIGHT >= 0:
                 result.append(
                     self._create_packman(
                         initial_state=State(pos_x=x, pos_y=y, action=Action.MOVE_UP)
                     )
                 )
-                weight -= PACMAN_WEIGHT
-            elif weight - COIN_WEIGHT >= 0:
+                weight -= EntityWeight.PACMAN_WEIGHT
+            elif weight - EntityWeight.COIN_WEIGHT >= 0:
                 result.append(Coin())
-                weight -= COIN_WEIGHT
+                weight -= EntityWeight.COIN_WEIGHT
         return result
 
     def _layout_from_map(self, layout: np.ndarray) -> list[Tile]:

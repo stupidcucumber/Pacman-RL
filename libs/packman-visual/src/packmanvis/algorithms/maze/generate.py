@@ -1,6 +1,7 @@
 import numpy as np
 from mazelib.generate.AldousBroder import AldousBroder
 from packmanvis.algorithms.maze.strave import strave_maze
+from packmanvis.algorithms.maze.types import EntityWeight
 
 
 def generate_maze(shape: tuple[int, int]) -> np.ndarray:
@@ -59,6 +60,30 @@ def _put_ghost_home(maze: np.ndarray) -> np.ndarray:
     return maze
 
 
+def _spawn_coins(layout: np.ndarray) -> np.ndarray:
+    layout[layout == 0] = EntityWeight.COIN_WEIGHT
+    return layout
+
+
+def _spawn_pacman(layout: np.ndarray) -> np.ndarray:
+    layout[1, layout.shape[1] // 2 - 1] = EntityWeight.PACMAN_WEIGHT
+    return layout
+
+
+def _spawn_ghosts(layout: np.ndarray, n_ghosts: int = 4) -> np.ndarray:
+    layout[layout.shape[0] // 2 + 1, layout.shape[1] // 2 - 1] = 0
+    layout[layout.shape[0] // 2 + 1, layout.shape[1] // 2 - 1] = (
+        n_ghosts * EntityWeight.GHOST_WEIGHT
+    )
+    return layout
+
+
+def _populate_maze(layout: np.ndarray, n_ghosts: int = 4) -> np.ndarray:
+    layout_with_coins = _spawn_coins(layout)
+    layout_with_ghosts = _spawn_ghosts(layout_with_coins, n_ghosts=n_ghosts)
+    return _spawn_pacman(layout_with_ghosts)
+
+
 def generate_pacmanlike_maze(shape: tuple[int, int]) -> np.ndarray:
     """Generates a maze that looks like a maze in pacman.
     Therefore it has little to no dead ends and most of
@@ -76,4 +101,5 @@ def generate_pacmanlike_maze(shape: tuple[int, int]) -> np.ndarray:
         Pacman maze representation.
     """
     straved_maze = generate_straved_maze(shape=shape)
-    return _put_ghost_home(straved_maze)
+    straved_maze_with_home = _put_ghost_home(straved_maze)
+    return _populate_maze(straved_maze_with_home)
