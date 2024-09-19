@@ -1,11 +1,13 @@
+from packmanvis.types.action import Action
 from packmanvis.types.mobs.mob import Mob
-from packmanvis.types.mobs.state import State
+from packmanvis.types.state import State
 
 
 class Pacman(Mob):
     def __init__(
         self,
         state: State,
+        action: Action,
         move_right_gif: str = "animations:mobs/pacman/pacman_move_right.gif",
         move_left_gif: str = "animations:mobs/pacman/pacman_move_left.gif",
         move_up_gif: str = "animations:mobs/pacman/pacman_move_up.gif",
@@ -17,6 +19,5 @@ class Pacman(Mob):
             move_right_gif=move_right_gif,
             move_up_gif=move_up_gif,
             state=state,
+            action=action,
         )
-        self.health = 3
-        self.score = 0

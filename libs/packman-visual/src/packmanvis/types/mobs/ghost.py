@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import enum
 
+from packmanvis.types.action import Action
 from packmanvis.types.mobs.mob import Mob
-from packmanvis.types.mobs.state import State
+from packmanvis.types.state import State
 
 
 class GhostType(enum.Enum):
@@ -20,6 +21,7 @@ class Ghost(Mob):
         move_left_gif: str,
         move_up_gif: str,
         move_down_gif: str,
+        action: Action,
         state: State,
     ) -> None:
         super(Ghost, self).__init__(
@@ -28,14 +30,16 @@ class Ghost(Mob):
             move_right_gif=move_right_gif,
             move_up_gif=move_up_gif,
             state=state,
+            action=action,
         )
         self.health = 3
         self.score = 0
 
     @classmethod
-    def create(cls, state: State, ghost_type: GhostType) -> Ghost:
+    def create(cls, state: State, action: Action, ghost_type: GhostType) -> Ghost:
         return cls(
             state=state,
+            action=action,
             move_right_gif=(
                 f"animations:mobs/ghost/{ghost_type.value}/ghost_move_right.gif"
             ),

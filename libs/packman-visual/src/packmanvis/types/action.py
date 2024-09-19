@@ -6,3 +6,4 @@ class Action(enum.IntEnum):
     MOVE_DOWN: int = 2
     MOVE_LEFT: int = 3
     MOVE_RIGHT: int = 4
+    STAY: int = 5

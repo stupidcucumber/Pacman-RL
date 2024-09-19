@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from typing import Callable
 
+from packmanvis.types.action import Action
 from packmanvis.types.animated import Animated
-from packmanvis.types.mobs.action import Action
-from packmanvis.types.mobs.state import State
+from packmanvis.types.entity import Entity
+from packmanvis.types.state import State
 
 
-class Mob(Animated):
+class Mob(Animated, Entity):
     def __init__(
         self,
         move_right_gif: str,
@@ -15,25 +16,26 @@ class Mob(Animated):
         move_up_gif: str,
         move_down_gif: str,
         state: State,
+        action: Action,
     ) -> None:
-        super(Mob, self).__init__(gif=move_right_gif)
+        Animated.__init__(
+            self,
+            gif=move_right_gif,
+        )
+        Entity.__init__(self, state=state, action=action)
+
         self.action_to_gif: dict[Action, str] = {
             Action.MOVE_UP: move_up_gif,
             Action.MOVE_DOWN: move_down_gif,
             Action.MOVE_LEFT: move_left_gif,
             Action.MOVE_RIGHT: move_right_gif,
         }
-
         self.action_to_move_slot: dict[Action, Callable[[Mob], bool] | None] = {
             Action.MOVE_UP: None,
             Action.MOVE_DOWN: None,
             Action.MOVE_LEFT: None,
             Action.MOVE_RIGHT: None,
         }
-
-        self.previous_state: State | None = None
-        self.current_state: State = state
-
         self.on_move_end_slot: Callable[..., None] | None = None
 
     def on_move(self, action: Action, slot: Callable[[Mob], bool]) -> None:
@@ -78,7 +80,7 @@ class Mob(Animated):
         movement_succeed = self.action_to_move_slot[action](self)
 
         if movement_succeed:
-            self.current_state.action = action
+            self.setAction()
             self.movement_end()
         else:
             self.previous_state = self.temp_state

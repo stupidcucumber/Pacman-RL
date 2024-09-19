@@ -1,13 +1,15 @@
 from collections import deque
 from dataclasses import dataclass
+from typing import Callable
 
 import numpy as np
 from packmanvis.algorithms.maze import generate_pacmanlike_maze
 from packmanvis.algorithms.maze.types import EntityWeight
+from packmanvis.types.action import Action
+from packmanvis.types.entity import Entity
 from packmanvis.types.items import Coin
 from packmanvis.types.mobs import Ghost, GhostType, Mob, Pacman
-from packmanvis.types.mobs.action import Action
-from packmanvis.types.mobs.state import State
+from packmanvis.types.state import State
 
 from .animated import Animated
 from .structure import Floor, Wall, WallType
@@ -38,23 +40,43 @@ class Maze:
         self.ncols = self.layout.shape[1]
         self.tiles: list[Tile] = self._layout_from_map(self.layout)
 
+        self.on_score_changed_slot: Callable[[], None] | None = None
+
+        self.score: int = 0
+        self.hearts: int = 3
+
+    def setScore(self, score: int) -> None:
+        self.score = score
+        self.on_score_changed_slot()
+
+    def destroy(self, obj: Entity) -> None:
+        self.tile(obj.current_state.pos_x, obj.current_state.pos_y).pop(obj)
+        obj.destroy()
+
+    def consume_coin(self, coin: Coin) -> None:
+        self.setScore(self.score + 50)
+        self.destroy(coin)
+
+    def on_score_changed(self, slot: Callable[[], None]) -> None:
+        self.on_score_changed_slot = slot
+
     def _move_object(self, obj: Mob, delta_x: int, delta_y: int) -> bool:
-        new_pos_x = obj.current_state.pos_x + delta_x
-        new_pos_y = obj.current_state.pos_y + delta_y
+        new_state = State(
+            obj.current_state.pos_x + delta_x, obj.current_state.pos_y + delta_y
+        )
 
-        if new_pos_x < 0 or new_pos_x >= self.ncols:
+        if new_state.pos_x < 0 or new_state.pos_x >= self.ncols:
             return False
 
-        if new_pos_y < 0 or new_pos_y >= self.nrows:
+        if new_state.pos_y < 0 or new_state.pos_y >= self.nrows:
             return False
 
-        next_tile = self.tile(x=new_pos_x, y=new_pos_y)
+        next_tile = self.tile(x=new_state.pos_x, y=new_state.pos_y)
 
         if next_tile.append(obj):
             previous_tile = self.tile(obj.current_state.pos_x, obj.current_state.pos_x)
             previous_tile.pop(obj)
-            obj.current_state.pos_x = new_pos_x
-            obj.current_state.pos_y = new_pos_y
+            obj.setState(new_state)
             return True
         return False
 
@@ -76,15 +98,24 @@ class Maze:
             slot=lambda obj, parent=self: parent._move_object(obj, 0, 1),
         )
 
-    def _create_ghost(self, initial_state: State, type: GhostType) -> Ghost:
-        ghost = Ghost.create(state=initial_state, ghost_type=type)
+    def _create_ghost(
+        self, initial_state: State, type: GhostType, action: Action
+    ) -> Ghost:
+        ghost = Ghost.create(state=initial_state, ghost_type=type, action=action)
         self._initialize_movement_callbacks(mob=ghost)
         return ghost
 
-    def _create_packman(self, initial_state: State) -> Pacman:
-        pacman = Pacman(state=initial_state)
+    def _create_packman(self, initial_state: State, action: Action) -> Pacman:
+        pacman = Pacman(state=initial_state, action=action)
         self._initialize_movement_callbacks(pacman)
+        pacman.on_collision(Coin, lambda other: self.consume_coin(coin=other))
+        pacman.on_collision(Ghost, lambda other: ...)
         return pacman
+
+    def _create_coin(self, initial_state: State) -> Coin:
+        coin = Coin(state=initial_state, action=Action.STAY)
+        coin.on_collision(Pacman, lambda other: self.destroy(coin))
+        return coin
 
     def _unravel_weight(self, layout: np.ndarray, x: int, y: int) -> list[Animated]:
         if layout[y, x] == 1:
@@ -97,20 +128,21 @@ class Maze:
             if weight - EntityWeight.GHOST_WEIGHT >= 0:
                 result.append(
                     self._create_ghost(
-                        initial_state=State(pos_x=x, pos_y=y, action=Action.MOVE_UP),
+                        initial_state=State(pos_x=x, pos_y=y),
                         type=ghost_types.pop(),
+                        action=Action.MOVE_UP,
                     )
                 )
                 weight -= EntityWeight.GHOST_WEIGHT
             elif weight - EntityWeight.PACMAN_WEIGHT >= 0:
                 result.append(
                     self._create_packman(
-                        initial_state=State(pos_x=x, pos_y=y, action=Action.MOVE_UP)
+                        initial_state=State(pos_x=x, pos_y=y), action=Action.MOVE_UP
                     )
                 )
                 weight -= EntityWeight.PACMAN_WEIGHT
             elif weight - EntityWeight.COIN_WEIGHT >= 0:
-                result.append(Coin())
+                result.append(self._create_coin(initial_state=State(pos_x=x, pos_y=y)))
                 weight -= EntityWeight.COIN_WEIGHT
         return result
 
