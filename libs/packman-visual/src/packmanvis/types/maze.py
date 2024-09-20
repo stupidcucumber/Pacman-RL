@@ -41,13 +41,26 @@ class Maze:
         self.tiles: list[Tile] = self._layout_from_map(self.layout)
 
         self.on_score_changed_slot: Callable[[], None] | None = None
+        self.on_hearts_changed_slot: Callable[[], None] | None = None
 
         self.score: int = 0
         self.hearts: int = 3
 
+    def on_score_changed(self, slot: Callable[[], None]) -> None:
+        self.on_score_changed_slot = slot
+
+    def on_hearts_changed(self, slot: Callable[[], None]) -> None:
+        self.on_hearts_changed_slot = slot
+
     def setScore(self, score: int) -> None:
         self.score = score
         self.on_score_changed_slot()
+
+    def setHearts(self, hearts: int) -> None:
+        if hearts < 0:
+            return
+        self.hearts = hearts
+        self.on_hearts_changed_slot()
 
     def destroy(self, obj: Entity) -> None:
         self.tile(obj.current_state.pos_x, obj.current_state.pos_y).pop(obj)
@@ -57,8 +70,8 @@ class Maze:
         self.setScore(self.score + 50)
         self.destroy(coin)
 
-    def on_score_changed(self, slot: Callable[[], None]) -> None:
-        self.on_score_changed_slot = slot
+    def take_heart(self, pacman: Pacman) -> None:
+        self.setHearts(self.hearts - 1)
 
     def _move_object(self, obj: Mob, delta_x: int, delta_y: int) -> bool:
         new_state = State(
@@ -77,6 +90,8 @@ class Maze:
             previous_tile = self.tile(obj.current_state.pos_x, obj.current_state.pos_x)
             previous_tile.pop(obj)
             obj.setState(new_state)
+            for collision_obj in next_tile.objects:
+                obj.collision(collision_obj)
             return True
         return False
 
@@ -109,12 +124,11 @@ class Maze:
         pacman = Pacman(state=initial_state, action=action)
         self._initialize_movement_callbacks(pacman)
         pacman.on_collision(Coin, lambda other: self.consume_coin(coin=other))
-        pacman.on_collision(Ghost, lambda other: ...)
+        pacman.on_collision(Ghost, lambda _, pacman=pacman: self.take_heart(pacman))
         return pacman
 
     def _create_coin(self, initial_state: State) -> Coin:
         coin = Coin(state=initial_state, action=Action.STAY)
-        coin.on_collision(Pacman, lambda other: self.destroy(coin))
         return coin
 
     def _unravel_weight(self, layout: np.ndarray, x: int, y: int) -> list[Animated]:

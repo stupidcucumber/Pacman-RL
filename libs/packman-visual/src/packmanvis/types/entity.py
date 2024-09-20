@@ -41,7 +41,7 @@ class Entity:
 
     def collision(self, other: Entity) -> None:
         if self.on_collision_slots.get(type(other)):
-            self.on_collision_slots[other](other)
+            self.on_collision_slots[type(other)](other)
 
     def destroy(self) -> None:
         self.on_destroy_slot()
