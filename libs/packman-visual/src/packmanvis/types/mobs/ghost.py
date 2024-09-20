@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import enum
 
-from packmanvis.types.action import Action
+from packmanvis.types.mobs.action import Action
 from packmanvis.types.mobs.mob import Mob
 from packmanvis.types.state import State
 
 
 class GhostType(enum.Enum):
+    """Represents types of ghosts as in the
+    original version of Pacman game. Each type
+    has its own strategy for chasing player.
+    """
+
     RED: str = "red"
     ORANGE: str = "orange"
     BLUE: str = "blue"
@@ -32,11 +37,25 @@ class Ghost(Mob):
             state=state,
             action=action,
         )
-        self.health = 3
-        self.score = 0
 
     @classmethod
     def create(cls, state: State, action: Action, ghost_type: GhostType) -> Ghost:
+        """Instantiates a Ghost with the specific type.
+
+        Parameters
+        ----------
+        state : State
+            Initial state of the ghost.
+        action : Action
+            Initial action the ghost should take.
+        ghost_type : GhostType
+            Type of the ghost.
+
+        Returns
+        -------
+        Ghost
+            Ghost of the specific type.
+        """
         return cls(
             state=state,
             action=action,

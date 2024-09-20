@@ -1,10 +1,19 @@
-from packmanvis.types.action import Action
 from packmanvis.types.animated import Animated
-from packmanvis.types.entity import Entity
+from packmanvis.types.collidable import Collidable
 from packmanvis.types.state import State
 
 
-class Item(Animated, Entity):
-    def __init__(self, gif: str, initial_state: State, action: Action) -> None:
+class Item(Animated, Collidable):
+    """Class that represents an item on the map.
+
+    Parameters
+    ----------
+    gif : str
+        Path to the default gif to me dispayed.
+    initial_state : State
+        Initial state of the item.
+    """
+
+    def __init__(self, gif: str, initial_state: State) -> None:
         Animated.__init__(self, gif=gif)
-        Entity.__init__(self, state=initial_state, action=action)
+        Collidable.__init__(self, state=initial_state)

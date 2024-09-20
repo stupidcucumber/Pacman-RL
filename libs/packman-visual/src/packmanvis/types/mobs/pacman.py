@@ -1,4 +1,4 @@
-from packmanvis.types.action import Action
+from packmanvis.types.mobs.action import Action
 from packmanvis.types.mobs.mob import Mob
 from packmanvis.types.state import State
 

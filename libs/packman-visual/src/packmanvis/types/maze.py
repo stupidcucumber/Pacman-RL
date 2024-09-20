@@ -5,10 +5,9 @@ from typing import Callable
 import numpy as np
 from packmanvis.algorithms.maze import generate_pacmanlike_maze
 from packmanvis.algorithms.maze.types import EntityWeight
-from packmanvis.types.action import Action
-from packmanvis.types.entity import Entity
+from packmanvis.types.collidable import Collidable
 from packmanvis.types.items import Coin
-from packmanvis.types.mobs import Ghost, GhostType, Mob, Pacman
+from packmanvis.types.mobs import Action, Ghost, GhostType, Mob, Pacman
 from packmanvis.types.state import State
 
 from .animated import Animated
@@ -16,17 +15,79 @@ from .structure import Floor, Wall, WallType
 
 
 @dataclass
+class MazeState:
+    """State of the maze. This allegedly can be used
+    to train RL agent.
+
+    Attributes
+    ----------
+    ghost_states: list[State]
+        States of the individual ghosts.
+    ghost_actions: list[Action]
+        Current actions that are taken by the ghosts.
+    pacman_state: State
+        State of the pacman.
+    pacman_action: Action
+        Action that is currently pacman takes.
+    score: int
+        Score achieved on the current step.
+    hearts: int
+        Hearts left on the current step.
+    """
+
+    ghost_states: list[State]
+    ghost_actions: list[Action]
+    pacman_state: State
+    pacman_action: Action
+    score: int
+    hearts: int
+
+
+@dataclass
 class Tile:
+    """Object that represents a single cell on the
+    map.
+
+    Attributes
+    ----------
+    objects : list[Animated]
+        A list of objects that tile contains.
+    """
+
     objects: list[Animated]
 
     @property
     def is_wall(self) -> bool:
+        """Checks whether the current tile contains wall as the
+        first object. If so, then True is returned.
+        """
         return isinstance(self.objects[0], Wall)
 
     def pop(self, obj: Animated) -> None:
+        """Removes object from the cell.
+
+        Parameters
+        ----------
+        obj : Animated
+            An object to be removed from the cell.
+        """
         self.objects.remove(obj)
 
     def append(self, obj: Animated) -> bool:
+        """Places object at the top of the cell if
+        cell does not contain wall.
+
+        Parameters
+        ----------
+        obj : Animated
+            Object to be placed.
+
+        Returns
+        -------
+        bool
+            True if object is successfully been placed onto
+            the tile, otherwise returns False.
+        """
         if self.is_wall:
             return False
         self.objects.append(obj)
@@ -34,7 +95,25 @@ class Tile:
 
 
 class Maze:
+    """An oracle object that defines rules of the game
+    and constructs a map.
+
+    It is responsible for generating maze, populating it with
+    structures/mobs/items. It also provides an interface to access
+    internal part of the maze.
+
+    Parameters
+    ----------
+    shape : tuple[int, int]
+        Shape of the maze.
+    """
+
     def __init__(self, shape: tuple[int, int]) -> None:
+        self.ghosts: list[Ghost] = []
+        self.pacman: Pacman | None = None
+        self.score: int = 0
+        self.hearts: int = 3
+
         self.layout = generate_pacmanlike_maze(shape=shape)
         self.nrows = self.layout.shape[0]
         self.ncols = self.layout.shape[1]
@@ -43,35 +122,11 @@ class Maze:
         self.on_score_changed_slot: Callable[[], None] | None = None
         self.on_hearts_changed_slot: Callable[[], None] | None = None
 
-        self.score: int = 0
-        self.hearts: int = 3
-
     def on_score_changed(self, slot: Callable[[], None]) -> None:
         self.on_score_changed_slot = slot
 
     def on_hearts_changed(self, slot: Callable[[], None]) -> None:
         self.on_hearts_changed_slot = slot
-
-    def setScore(self, score: int) -> None:
-        self.score = score
-        self.on_score_changed_slot()
-
-    def setHearts(self, hearts: int) -> None:
-        if hearts < 0:
-            return
-        self.hearts = hearts
-        self.on_hearts_changed_slot()
-
-    def destroy(self, obj: Entity) -> None:
-        self.tile(obj.current_state.pos_x, obj.current_state.pos_y).pop(obj)
-        obj.destroy()
-
-    def consume_coin(self, coin: Coin) -> None:
-        self.setScore(self.score + 50)
-        self.destroy(coin)
-
-    def take_heart(self, pacman: Pacman) -> None:
-        self.setHearts(self.hearts - 1)
 
     def _move_object(self, obj: Mob, delta_x: int, delta_y: int) -> bool:
         new_state = State(
@@ -95,7 +150,67 @@ class Maze:
             return True
         return False
 
+    def setScore(self, score: int) -> None:
+        """Set the current score.
+
+        Parameters
+        ----------
+        score : int
+            Must be more or equal to 0.
+        """
+        if score < 0:
+            return
+        self.score = score
+        self.on_score_changed_slot()
+
+    def setHearts(self, hearts: int) -> None:
+        """Set the number of hearts.
+
+        Parameters
+        ----------
+        hearts : int
+            The number of hearts. Must be more or equal to 0.
+        """
+        if hearts < 0:
+            return
+        self.hearts = hearts
+        self.on_hearts_changed_slot()
+
+    def destroy(self, obj: Collidable) -> None:
+        """Completely removes object from the map.
+
+        Parameters
+        ----------
+        obj : Collidable
+            An object to be completely removed from the map.
+        """
+        self.tile(obj.current_state.pos_x, obj.current_state.pos_y).pop(obj)
+        obj.destroy()
+
+    def consume_coin(self, coin: Coin) -> None:
+        """Consumes coin, which means it will be deleted from
+        map and score will be increased by 50 points.
+
+        Parameters
+        ----------
+        coin : Coin
+            A coin to be consumed.
+        """
+        self.setScore(self.score + 50)
+        self.destroy(coin)
+
     def _initialize_movement_callbacks(self, mob: Mob) -> None:
+        """Initializes four basic movement callbacks inplace:
+            - move left
+            - move right
+            - move down
+            - move up
+
+        Parameters
+        ----------
+        mob : Mob
+            An object that needs movement callbacks to be initialized.
+        """
         mob.on_move(
             action=Action.MOVE_LEFT,
             slot=lambda obj, parent=self: parent._move_object(obj, -1, 0),
@@ -116,22 +231,66 @@ class Maze:
     def _create_ghost(
         self, initial_state: State, type: GhostType, action: Action
     ) -> Ghost:
+        """Helper method for instantiating ghost and assigning default
+        movement callbacks to it.
+
+        Parameters
+        ----------
+        initial_state : State
+        type : GhostType
+        action : Action
+
+        Returns
+        -------
+        Ghost
+            Mob with default movement callbacks already assigned.
+        """
         ghost = Ghost.create(state=initial_state, ghost_type=type, action=action)
         self._initialize_movement_callbacks(mob=ghost)
+        self.ghosts.append(ghost)
         return ghost
 
     def _create_packman(self, initial_state: State, action: Action) -> Pacman:
+        """Helper method for instantiating pacman and assigning default
+        movement callbacks to it.
+
+        Parameters
+        ----------
+        initial_state : State
+            Initial state of the mob.
+        action : Action
+            Initial action of the mob.
+
+        Returns
+        -------
+        Pacman
+            Mob with default movement callbacks already assigned.
+        """
         pacman = Pacman(state=initial_state, action=action)
         self._initialize_movement_callbacks(pacman)
         pacman.on_collision(Coin, lambda other: self.consume_coin(coin=other))
-        pacman.on_collision(Ghost, lambda _, pacman=pacman: self.take_heart(pacman))
+        pacman.on_collision(Ghost, lambda _: self.setHearts(self.hearts - 1))
+        self.pacman = pacman
         return pacman
 
-    def _create_coin(self, initial_state: State) -> Coin:
-        coin = Coin(state=initial_state, action=Action.STAY)
-        return coin
-
     def _unravel_weight(self, layout: np.ndarray, x: int, y: int) -> list[Animated]:
+        """Unravels weight of a specific cell into a list of objects
+        placed there.
+
+        Parameters
+        ----------
+        layout : np.ndarray
+            A numeric representation of a map.
+        x : int
+            A column position of a cell needs to be unraveled.
+        y : int
+            A row position of a cell needs to be unraveled.
+
+        Returns
+        -------
+        list[Animated]
+            A list of objects from the cell.
+        """
         if layout[y, x] == 1:
             return [Wall.create(wall_type=WallType.infer(layout=layout, x=x, y=y))]
 
@@ -156,11 +315,24 @@ class Maze:
                 )
                 weight -= EntityWeight.PACMAN_WEIGHT
             elif weight - EntityWeight.COIN_WEIGHT >= 0:
-                result.append(self._create_coin(initial_state=State(pos_x=x, pos_y=y)))
+                result.append(Coin(state=State(pos_x=x, pos_y=y)))
                 weight -= EntityWeight.COIN_WEIGHT
         return result
 
     def _layout_from_map(self, layout: np.ndarray) -> list[Tile]:
+        """Generates an object-oriented representation of a populated
+        maze from numeric representation into a 1d array of tiles.
+
+        Parameters
+        ----------
+        layout : np.ndarray
+            A numeric representation of a maze.
+
+        Returns
+        -------
+        list[Tile]
+            A 1d array of tiles.
+        """
         result = [None] * layout.size
 
         for row_index, row in enumerate(layout):
@@ -174,6 +346,21 @@ class Maze:
         return result
 
     def tile(self, x: int, y: int) -> Tile:
+        """A getter method to look into a specific tile
+        on the map.
+
+        Parameters
+        ----------
+        x : int
+            Column where the tile is placed.
+        y : int
+            Row where the tile is placed.
+
+        Returns
+        -------
+        Tile
+            Tile in the position (x, y).
+        """
         if y < 0 or y >= self.nrows:
             raise ValueError(
                 f"Y coordinate is out of range: "
@@ -186,3 +373,14 @@ class Maze:
             )
 
         return self.tiles[y * self.ncols + x]
+
+    def state(self) -> MazeState:
+        """Generates state object for the maze."""
+        return MazeState(
+            ghost_states=[ghost.current_state for ghost in self.ghosts],
+            ghost_actions=[ghost.current_action for ghost in self.ghosts],
+            pacman_state=self.pacman.current_state,
+            pacman_action=self.pacman.current_action,
+            score=self.score,
+            hearts=self.hearts,
+        )
