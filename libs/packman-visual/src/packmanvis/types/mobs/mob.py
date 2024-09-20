@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import Callable
 
 from packmanvis.types.animated import Animated
@@ -8,7 +9,7 @@ from packmanvis.types.mobs.action import Action
 from packmanvis.types.state import State
 
 
-class Mob(Animated, Collidable):
+class Mob(Animated, Collidable, ABC):
     """A class that represents a movable object.
 
     Parameters
@@ -49,6 +50,7 @@ class Mob(Animated, Collidable):
             gif=move_right_gif,
         )
         Collidable.__init__(self, state=state)
+        ABC.__init__(self)
 
         self.action_to_gif: dict[Action, str] = {
             Action.MOVE_UP: move_up_gif,
@@ -121,6 +123,7 @@ class Mob(Animated, Collidable):
         self.current_action = action
         self.on_action_changed_slot(action)
 
+    @abstractmethod
     def action(self) -> Action:
         """Takes an action based on the maze state."""
         raise NotImplementedError("To use this method you need to implement it!")
