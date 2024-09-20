@@ -2,11 +2,15 @@ import itertools
 from dataclasses import dataclass
 
 from packmanvis.types.maze import Maze, MazeState
+from packmanvis.types.mobs import Action
 
 
 @dataclass
-class EnvironmentState:
-    pass
+class EnvironmentStep:
+    action: Action
+    maze_state: MazeState
+    reward: int
+    done: bool
 
 
 class Environment:
@@ -19,21 +23,53 @@ class Environment:
     For more follow the link: https://arxiv.org/abs/2407.17032.
     """
 
-    def __init__(self) -> None:
-        self.maze = Maze(shape=(10, 20))
+    def __init__(self, shape: tuple[int, int] = (10, 20), seed: int = 42) -> None:
+        self.seed = seed
+        self.shape = shape
+        self.maze = Maze(shape=self.shape)
 
-    def reset(self, seed: int = 42) -> EnvironmentState:
-        pass
+    def reset(self) -> EnvironmentStep:
+        """Resets the environment:
+            - Recreates maze.
+            - Respawns all objects in the maze.
+
+        Returns
+        -------
+        EnvironmentStep
+            Step of the environment.
+        """
+        self.maze = Maze(shape=self.shape)
 
     def calculate_reward(self, maze_state: MazeState) -> float:
+        """Calculates the reward of the maze.
+
+        Parameters
+        ----------
+        maze_state : MazeState
+            State of the maze to calculate reward on.
+
+        Returns
+        -------
+        float
+            Calculated reward for the agent.
+        """
         pass
 
-    def step(self) -> tuple[MazeState, float]:
+    def step(self) -> EnvironmentStep:
+        """Makes environment step (moves objects, predicts next
+        best move for Pacman).
+
+        Returns
+        -------
+        EnvironmentStep
+            Step of the environment.
+        """
         for mob in itertools.chain(self.maze.ghosts, [self.maze.pacman]):
             mob.move()
         maze_state = self.maze.state()
-        reward = self.calculate_reward(maze_state)
-        return self.maze.state(), reward
-
-    def close(self) -> None:
-        pass
+        return EnvironmentStep(
+            reward=self.calculate_reward(maze_state),
+            maze_state=maze_state,
+            action=...,
+            done=...,
+        )
