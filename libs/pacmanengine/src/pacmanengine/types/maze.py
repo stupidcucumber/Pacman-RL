@@ -7,40 +7,12 @@ from pacmanengine.algorithms.maze import generate_pacmanlike_maze
 from pacmanengine.algorithms.maze.types import EntityWeight
 from pacmanengine.types.collidable import Collidable
 from pacmanengine.types.items import Coin
+from pacmanengine.types.maze_state import MazeState
 from pacmanengine.types.mobs import Action, Ghost, GhostType, Mob, Pacman
 from pacmanengine.types.state import State
 
 from .animated import Animated
 from .structure import Floor, Wall, WallType
-
-
-@dataclass
-class MazeState:
-    """State of the maze. This allegedly can be used
-    to train RL agent.
-
-    Attributes
-    ----------
-    ghost_states: list[State]
-        States of the individual ghosts.
-    ghost_actions: list[Action]
-        Current actions that are taken by the ghosts.
-    pacman_state: State
-        State of the pacman.
-    pacman_action: Action
-        Action that is currently pacman takes.
-    score: int
-        Score achieved on the current step.
-    hearts: int
-        Hearts left on the current step.
-    """
-
-    ghost_states: list[State]
-    ghost_actions: list[Action]
-    pacman_state: State
-    pacman_action: Action
-    score: int
-    hearts: int
 
 
 @dataclass
