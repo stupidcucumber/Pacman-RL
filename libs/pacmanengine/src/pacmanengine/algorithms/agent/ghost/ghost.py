@@ -2,6 +2,7 @@ from abc import abstractmethod
 
 import numpy as np
 from pacmanengine.algorithms.agent.agent import Agent
+from pacmanengine.algorithms.agent.ghost.a_star import a_star
 from pacmanengine.types.maze_state import MazeState
 from pacmanengine.types.mobs import Action
 from pacmanengine.types.state import State
@@ -32,33 +33,48 @@ class GhostAgent(Agent):
             "This method needs to be implemented in the child class."
         )
 
-    def calculate_score_matrix(
-        self, layout: np.ndarray, starting_state: State, ending_state: State
-    ) -> np.ndarray:
-        """Calculates score matrix for the provided layout
-        to reach from the starting point to the end point.
+    def _find_probable_states(
+        self, current_state: State, layout: np.ndarray
+    ) -> list[State]:
+        """Algorithm for extract all possible ways to go from the current state.
 
         Parameters
         ----------
+        current_state : State
+            Current cell where ghost resides.
         layout : np.ndarray
-        starting_state : State
-        ending_state : State
+            Layout of the maze.
 
         Returns
         -------
-        np.ndarray
-            Score matrix, for every path.
-
-        Notes
-        -----
-        Score matrix is calculated according to the A* (A-star)
-        algorithm. For more info visit link below:
-        https://www.graphable.ai/blog/pathfinding-algorithms.
+        list[State]
+            List of states where a Ghost can go.
         """
-        pass
+        min_x, max_x = 0, layout.shape[1] - 1
+        min_y, max_y = 0, layout.shape[0] - 1
+        probable_states: list[State] = []
+
+        if current_state.pos_x > min_x:
+            probable_states.append(
+                State(pos_x=current_state.pos_x - 1, pos_y=current_state.pos_y)
+            )
+        if current_state.pos_x < max_x:
+            probable_states.append(
+                State(pos_x=current_state.pos_x + 1, pos_y=current_state.pos_y)
+            )
+        if current_state.pos_y > min_y:
+            probable_states.append(
+                State(pos_x=current_state.pos_x, pos_y=current_state.pos_y - 1)
+            )
+        if current_state.pos_y < max_y:
+            probable_states.append(
+                State(pos_x=current_state.pos_x, pos_y=current_state.pos_y + 1)
+            )
+
+        return probable_states
 
     def choose_next_state(
-        self, current_state: State, score_matrix: np.ndarray
+        self, current_state: State, ending_state: State, layout: np.ndarray
     ) -> State:
         """Choses the next state to go into based on provided score matrix.
 
@@ -66,39 +82,16 @@ class GhostAgent(Agent):
         ----------
         current_state : State
             Current state where the ghost resides.
-        score_matrix : np.ndarray
-            Calculated score matrix for all available paths.
+        layout : np.ndarray
+            Layout of the maze
 
         Returns
         -------
         State
             Next state to go into.
         """
-        min_x, max_x = 0, score_matrix.shape[1] - 1
-        min_y, max_y = 0, score_matrix.shape[0] - 1
-
-        possible_states: list[State] = []
-        if current_state.pos_x > min_x:
-            possible_states.append(
-                State(pos_x=current_state.pos_x - 1, pos_y=current_state.pos_y)
-            )
-        if current_state.pos_x < max_x:
-            possible_states.append(
-                State(pos_x=current_state.pos_x + 1, pos_y=current_state.pos_y)
-            )
-        if current_state.pos_y > min_y:
-            possible_states.append(
-                State(pos_x=current_state.pos_x, pos_y=current_state.pos_y - 1)
-            )
-        if current_state.pos_y < max_y:
-            possible_states.append(
-                State(pos_x=current_state.pos_x, pos_y=current_state.pos_y + 1)
-            )
-
-        return min(
-            possible_states,
-            key=lambda state, matrix=score_matrix: matrix[state.pos_y, state.pos_x],
-        )
+        next_y, next_x = a_star(start=current_state, goal=ending_state, layout=layout)
+        return State(pos_x=next_x, pos_y=next_y)
 
     def state_to_action(self, current_state: State, next_state: State) -> Action:
         """Converts transition from one state to another into the action.
@@ -128,12 +121,7 @@ class GhostAgent(Agent):
 
     def action(self, starting_state: State, maze_state: MazeState) -> Action:
         ending_state = self.choose_ending_state(maze_state=maze_state)
-        score_matrix = self.calculate_score_matrix(
-            layout=maze_state.layout,
-            starting_point=starting_state,
-            ending_state=ending_state,
-        )
         next_state = self.choose_next_state(
-            current_state=starting_state, score_matrix=score_matrix
+            current_state=starting_state, ending_state=ending_state
         )
         return self.state_to_action(current_state=starting_state, next_state=next_state)
