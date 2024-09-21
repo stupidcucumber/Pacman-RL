@@ -5,7 +5,6 @@ from typing import Callable
 from pacmanengine.algorithms.agent.agent import Agent
 from pacmanengine.types.animated import Animated
 from pacmanengine.types.collidable import Collidable
-from pacmanengine.types.maze_state import MazeState
 from pacmanengine.types.mobs.action import Action
 from pacmanengine.types.state import State
 
@@ -129,9 +128,7 @@ class Mob(Animated, Collidable):
         """Takes an action based on the maze state."""
         raise NotImplementedError("To use this method you need to implement it!")
 
-    def move(
-        self, maze_state: MazeState | None = None, action: Action | None = None
-    ) -> None:
+    def move(self, maze_state, action: Action | None = None) -> None:
         """Method moves object around. You either can pass a
         specific actions (e.g. simulate an agent, play yourself), or desire
         to do an algorithm (like simulate behavior of the ghost.)

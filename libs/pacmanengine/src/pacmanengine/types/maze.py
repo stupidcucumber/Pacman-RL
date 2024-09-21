@@ -350,9 +350,7 @@ class Maze:
         """Generates state object for the maze."""
         return MazeState(
             ghost_states=[ghost.current_state for ghost in self.ghosts],
-            ghost_actions=[ghost.current_action for ghost in self.ghosts],
             pacman_state=self.pacman.current_state,
-            pacman_action=self.pacman.current_action,
             score=self.score,
             hearts=self.hearts,
         )

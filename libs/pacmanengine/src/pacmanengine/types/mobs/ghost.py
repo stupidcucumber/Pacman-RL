@@ -16,7 +16,7 @@ class GhostType(enum.Enum):
     RED: str = "red"
     ORANGE: str = "orange"
     BLUE: str = "blue"
-    GREEN: str = "pink"
+    PINK: str = "pink"
 
 
 class Ghost(Mob):
