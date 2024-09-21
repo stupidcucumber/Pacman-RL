@@ -1,1 +1,4 @@
 pre-commit
+PyQT6
+-e libs/pacmanengine
+-e libs/pacmanagent
