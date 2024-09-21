@@ -6,5 +6,5 @@ from pacmanengine.types.state import State
 class PinkyAgent(GhostAgent):
     """Agent for Pinky ghost (the pink one)."""
 
-    def choose_ending_state(self, maze_state: MazeState) -> State:
+    def choose_ending_state(self, ghost_state: State, maze_state: MazeState) -> State:
         return super().choose_ending_state()

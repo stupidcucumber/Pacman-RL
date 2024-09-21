@@ -14,12 +14,14 @@ class GhostAgent(Agent):
     """
 
     @abstractmethod
-    def choose_ending_state(self, maze_state: MazeState) -> State:
+    def choose_ending_state(self, ghost_state: State, maze_state: MazeState) -> State:
         """Decides which tile the ghost will target based on the
         movement of other ghosts and pacman position.
 
         Parameters
         ----------
+        ghost_state : State
+            Current state of the agent's ghost.
         maze_state : MazeState
             State of the Maze, along with states of individual
             ghosts and Pacman.
