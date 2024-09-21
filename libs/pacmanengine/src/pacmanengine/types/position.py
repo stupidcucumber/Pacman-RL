@@ -2,6 +2,6 @@ from dataclasses import dataclass
 
 
 @dataclass
-class State:
+class Position:
     pos_x: int
     pos_y: int

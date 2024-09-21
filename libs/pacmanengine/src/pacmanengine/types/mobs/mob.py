@@ -6,7 +6,7 @@ from pacmanengine.algorithms.agent.agent import Agent
 from pacmanengine.types.animated import Animated
 from pacmanengine.types.collidable import Collidable
 from pacmanengine.types.mobs.action import Action
-from pacmanengine.types.state import State
+from pacmanengine.types.position import Position
 
 
 class Mob(Animated, Collidable):
@@ -22,8 +22,8 @@ class Mob(Animated, Collidable):
         GIF that will be shown when object moves up.
     move_down_gif: str
         GIF that will be shown when object moves down.
-    state: State
-        Initial state of the object (x, y).
+    position: Position
+        Initial position of the object (x, y).
     action: Action
         Action that is currently being taken.
 
@@ -42,7 +42,7 @@ class Mob(Animated, Collidable):
         move_left_gif: str,
         move_up_gif: str,
         move_down_gif: str,
-        state: State,
+        position: Position,
         action: Action,
         agent: Agent | None = None,
     ) -> None:
@@ -50,7 +50,7 @@ class Mob(Animated, Collidable):
             self,
             gif=move_right_gif,
         )
-        Collidable.__init__(self, state=state)
+        Collidable.__init__(self, position=position)
         self.agent = agent
 
         self.action_to_gif: dict[Action, str] = {
@@ -124,10 +124,6 @@ class Mob(Animated, Collidable):
         self.current_action = action
         self.on_action_changed_slot(action)
 
-    def action(self) -> Action:
-        """Takes an action based on the maze state."""
-        raise NotImplementedError("To use this method you need to implement it!")
-
     def move(self, maze_state, action: Action | None = None) -> None:
         """Method moves object around. You either can pass a
         specific actions (e.g. simulate an agent, play yourself), or desire
@@ -148,7 +144,9 @@ class Mob(Animated, Collidable):
             raise ValueError("Agent of this mob have not been initialized!")
 
         if not action and self.agent:
-            action = self.agent.action(maze_state=maze_state)
+            action = self.agent.action(
+                starting_position=self.current_position, maze_state=maze_state
+            )
 
         self.setAction(action)
 

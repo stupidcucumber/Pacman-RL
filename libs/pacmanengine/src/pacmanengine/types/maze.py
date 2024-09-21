@@ -9,7 +9,7 @@ from pacmanengine.types.collidable import Collidable
 from pacmanengine.types.items import Coin
 from pacmanengine.types.maze_state import MazeState
 from pacmanengine.types.mobs import Action, Ghost, GhostType, Mob, Pacman
-from pacmanengine.types.state import State
+from pacmanengine.types.position import Position
 
 from .animated import Animated
 from .structure import Floor, Wall, WallType
@@ -101,22 +101,24 @@ class Maze:
         self.on_hearts_changed_slot = slot
 
     def _move_object(self, obj: Mob, delta_x: int, delta_y: int) -> bool:
-        new_state = State(
-            obj.current_state.pos_x + delta_x, obj.current_state.pos_y + delta_y
+        new_position = Position(
+            obj.current_position.pos_x + delta_x, obj.current_position.pos_y + delta_y
         )
 
-        if new_state.pos_x < 0 or new_state.pos_x >= self.ncols:
+        if new_position.pos_x < 0 or new_position.pos_x >= self.ncols:
             return False
 
-        if new_state.pos_y < 0 or new_state.pos_y >= self.nrows:
+        if new_position.pos_y < 0 or new_position.pos_y >= self.nrows:
             return False
 
-        next_tile = self.tile(x=new_state.pos_x, y=new_state.pos_y)
+        next_tile = self.tile(x=new_position.pos_x, y=new_position.pos_y)
 
         if next_tile.append(obj):
-            previous_tile = self.tile(obj.current_state.pos_x, obj.current_state.pos_x)
+            previous_tile = self.tile(
+                obj.current_position.pos_x, obj.current_position.pos_x
+            )
             previous_tile.pop(obj)
-            obj.setState(new_state)
+            obj.setPosition(new_position)
             for collision_obj in next_tile.objects:
                 obj.collision(collision_obj)
             return True
@@ -156,7 +158,7 @@ class Maze:
         obj : Collidable
             An object to be completely removed from the map.
         """
-        self.tile(obj.current_state.pos_x, obj.current_state.pos_y).pop(obj)
+        self.tile(obj.current_position.pos_x, obj.current_position.pos_y).pop(obj)
         obj.destroy()
 
     def consume_coin(self, coin: Coin) -> None:
@@ -201,14 +203,14 @@ class Maze:
         )
 
     def _create_ghost(
-        self, initial_state: State, type: GhostType, action: Action
+        self, initial_position: Position, type: GhostType, action: Action
     ) -> Ghost:
         """Helper method for instantiating ghost and assigning default
         movement callbacks to it.
 
         Parameters
         ----------
-        initial_state : State
+        initial_position : Position
         type : GhostType
         action : Action
 
@@ -217,19 +219,19 @@ class Maze:
         Ghost
             Mob with default movement callbacks already assigned.
         """
-        ghost = Ghost.create(state=initial_state, ghost_type=type, action=action)
+        ghost = Ghost.create(position=initial_position, ghost_type=type, action=action)
         self._initialize_movement_callbacks(mob=ghost)
         self.ghosts.append(ghost)
         return ghost
 
-    def _create_packman(self, initial_state: State, action: Action) -> Pacman:
+    def _create_packman(self, initial_position: Position, action: Action) -> Pacman:
         """Helper method for instantiating pacman and assigning default
         movement callbacks to it.
 
         Parameters
         ----------
-        initial_state : State
-            Initial state of the mob.
+        initial_position : Position
+            Initial position of the mob.
         action : Action
             Initial action of the mob.
 
@@ -238,7 +240,7 @@ class Maze:
         Pacman
             Mob with default movement callbacks already assigned.
         """
-        pacman = Pacman(state=initial_state, action=action)
+        pacman = Pacman(position=initial_position, action=action)
         self._initialize_movement_callbacks(pacman)
         pacman.on_collision(Coin, lambda other: self.consume_coin(coin=other))
         pacman.on_collision(Ghost, lambda _: self.setHearts(self.hearts - 1))
@@ -273,7 +275,7 @@ class Maze:
             if weight - EntityWeight.GHOST_WEIGHT >= 0:
                 result.append(
                     self._create_ghost(
-                        initial_state=State(pos_x=x, pos_y=y),
+                        initial_position=Position(pos_x=x, pos_y=y),
                         type=ghost_types.pop(),
                         action=Action.MOVE_UP,
                     )
@@ -282,12 +284,13 @@ class Maze:
             elif weight - EntityWeight.PACMAN_WEIGHT >= 0:
                 result.append(
                     self._create_packman(
-                        initial_state=State(pos_x=x, pos_y=y), action=Action.MOVE_UP
+                        initial_position=Position(pos_x=x, pos_y=y),
+                        action=Action.MOVE_UP,
                     )
                 )
                 weight -= EntityWeight.PACMAN_WEIGHT
             elif weight - EntityWeight.COIN_WEIGHT >= 0:
-                result.append(Coin(state=State(pos_x=x, pos_y=y)))
+                result.append(Coin(position=Position(pos_x=x, pos_y=y)))
                 weight -= EntityWeight.COIN_WEIGHT
         return result
 
@@ -349,8 +352,8 @@ class Maze:
     def state(self) -> MazeState:
         """Generates state object for the maze."""
         return MazeState(
-            ghost_states=[ghost.current_state for ghost in self.ghosts],
-            pacman_state=self.pacman.current_state,
+            ghost_states=[ghost.current_position for ghost in self.ghosts],
+            pacman_state=self.pacman.current_position,
             score=self.score,
             hearts=self.hearts,
             layout=self.layout,

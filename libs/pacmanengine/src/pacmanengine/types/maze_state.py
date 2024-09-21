@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 import numpy as np
-from pacmanengine.types.state import State
+from pacmanengine.types.position import Position
 
 
 @dataclass
@@ -11,18 +11,18 @@ class MazeState:
 
     Attributes
     ----------
-    ghost_states: list[State]
-        States of the individual ghosts.
-    pacman_state: State
-        State of the pacman.
+    ghost_positions: list[Position]
+        Positions of the individual ghosts.
+    pacman_position: Position
+        Position of the pacman.
     score: int
         Score achieved on the current step.
     hearts: int
         Hearts left on the current step.
     """
 
-    ghost_states: list[State]
-    pacman_state: State
+    ghost_positions: list[Position]
+    pacman_position: Position
     score: int
     hearts: int
     layout: np.ndarray

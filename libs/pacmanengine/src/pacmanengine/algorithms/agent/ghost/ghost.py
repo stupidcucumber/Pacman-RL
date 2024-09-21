@@ -5,7 +5,7 @@ from pacmanengine.algorithms.agent.agent import Agent
 from pacmanengine.algorithms.agent.ghost.a_star import a_star
 from pacmanengine.types.maze_state import MazeState
 from pacmanengine.types.mobs import Action
-from pacmanengine.types.state import State
+from pacmanengine.types.position import Position
 
 
 class GhostAgent(Agent):
@@ -14,118 +14,130 @@ class GhostAgent(Agent):
     """
 
     @abstractmethod
-    def choose_ending_state(self, ghost_state: State, maze_state: MazeState) -> State:
+    def choose_ending_position(
+        self, ghost_position: Position, maze_state: MazeState
+    ) -> Position:
         """Decides which tile the ghost will target based on the
         movement of other ghosts and pacman position.
 
         Parameters
         ----------
-        ghost_state : State
-            Current state of the agent's ghost.
+        ghost_position : Position
+            Current position of the agent's ghost.
         maze_state : MazeState
-            State of the Maze, along with states of individual
+            State of the Maze, along with positions of individual
             ghosts and Pacman.
 
         Returns
         -------
-        State
-            State in which ghost needs to be in.
+        Position
+            Position in which ghost needs to be in.
         """
         raise NotImplementedError(
             "This method needs to be implemented in the child class."
         )
 
-    def _find_probable_states(
-        self, current_state: State, layout: np.ndarray
-    ) -> list[State]:
-        """Algorithm for extract all possible ways to go from the current state.
+    def _find_probable_positions(
+        self, current_position: Position, layout: np.ndarray
+    ) -> list[Position]:
+        """Algorithm for extract all possible ways to go from the current position.
 
         Parameters
         ----------
-        current_state : State
+        current_position : Position
             Current cell where ghost resides.
         layout : np.ndarray
             Layout of the maze.
 
         Returns
         -------
-        list[State]
-            List of states where a Ghost can go.
+        list[Position]
+            List of positions where a Ghost can go.
         """
         min_x, max_x = 0, layout.shape[1] - 1
         min_y, max_y = 0, layout.shape[0] - 1
-        probable_states: list[State] = []
+        probable_positions: list[Position] = []
 
-        if current_state.pos_x > min_x:
-            probable_states.append(
-                State(pos_x=current_state.pos_x - 1, pos_y=current_state.pos_y)
+        if current_position.pos_x > min_x:
+            probable_positions.append(
+                Position(pos_x=current_position.pos_x - 1, pos_y=current_position.pos_y)
             )
-        if current_state.pos_x < max_x:
-            probable_states.append(
-                State(pos_x=current_state.pos_x + 1, pos_y=current_state.pos_y)
+        if current_position.pos_x < max_x:
+            probable_positions.append(
+                Position(pos_x=current_position.pos_x + 1, pos_y=current_position.pos_y)
             )
-        if current_state.pos_y > min_y:
-            probable_states.append(
-                State(pos_x=current_state.pos_x, pos_y=current_state.pos_y - 1)
+        if current_position.pos_y > min_y:
+            probable_positions.append(
+                Position(pos_x=current_position.pos_x, pos_y=current_position.pos_y - 1)
             )
-        if current_state.pos_y < max_y:
-            probable_states.append(
-                State(pos_x=current_state.pos_x, pos_y=current_state.pos_y + 1)
+        if current_position.pos_y < max_y:
+            probable_positions.append(
+                Position(pos_x=current_position.pos_x, pos_y=current_position.pos_y + 1)
             )
 
-        return probable_states
+        return probable_positions
 
-    def choose_next_state(
-        self, current_state: State, ending_state: State, layout: np.ndarray
-    ) -> State:
-        """Choses the next state to go into based on provided score matrix.
+    def choose_next_position(
+        self, current_position: Position, ending_position: Position, layout: np.ndarray
+    ) -> Position:
+        """Choses the next position to go into based on provided score matrix.
 
         Parameters
         ----------
-        current_state : State
-            Current state where the ghost resides.
+        current_position : Position
+            Current position where the ghost resides.
+        ending_position : Position
+            Ending position where ghost is heading.
         layout : np.ndarray
             Layout of the maze
 
         Returns
         -------
-        State
-            Next state to go into.
+        Position
+            Next position to go into.
         """
-        next_y, next_x = a_star(start=current_state, goal=ending_state, layout=layout)
-        return State(pos_x=next_x, pos_y=next_y)
+        next_y, next_x = a_star(
+            start=(current_position.pos_y, current_position.pos_x),
+            goal=(ending_position.pos_y, ending_position.pos_x),
+            layout=layout,
+        )
+        return Position(pos_x=next_x, pos_y=next_y)
 
-    def state_to_action(self, current_state: State, next_state: State) -> Action:
-        """Converts transition from one state to another into the action.
+    def position_to_action(
+        self, current_position: Position, next_position: Position
+    ) -> Action:
+        """Converts transition from one position to another into the action.
 
         Parameters
         ----------
-        current_state : State
+        current_position : Position
             Where ghost resides now.
-        next_state : State
+        next_position : Position
             Where ghost needs to go.
 
         Returns
         -------
         Action
             Action that needs to be taken by the ghost to move from
-            current state to the next state.
+            current position to the next position.
         """
-        if current_state.pos_x - next_state.pos_x == -1:
+        if current_position.pos_x - next_position.pos_x == -1:
             return Action.MOVE_RIGHT
-        if current_state.pos_x - next_state.pos_x == 1:
+        if current_position.pos_x - next_position.pos_x == 1:
             return Action.MOVE_LEFT
-        if current_state.pos_y - next_state.pos_y == -1:
+        if current_position.pos_y - next_position.pos_y == -1:
             return Action.MOVE_DOWN
-        if current_state.pos_y - next_state.pos_y == 1:
+        if current_position.pos_y - next_position.pos_y == 1:
             return Action.MOVE_UP
         return Action.STAY
 
-    def action(self, starting_state: State, maze_state: MazeState) -> Action:
-        ending_state = self.choose_ending_state(
-            ghost_state=starting_state, maze_state=maze_state
+    def action(self, starting_position: Position, maze_state: MazeState) -> Action:
+        ending_position = self.choose_ending_position(
+            ghost_position=starting_position, maze_state=maze_state
         )
-        next_state = self.choose_next_state(
-            current_state=starting_state, ending_state=ending_state
+        next_position = self.choose_next_position(
+            current_position=starting_position, ending_position=ending_position
         )
-        return self.state_to_action(current_state=starting_state, next_state=next_state)
+        return self.position_to_action(
+            current_position=starting_position, next_position=next_position
+        )

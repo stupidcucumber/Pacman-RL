@@ -11,7 +11,7 @@ from pacmanengine.algorithms.agent.ghost import (
 )
 from pacmanengine.types.mobs.action import Action
 from pacmanengine.types.mobs.mob import Mob
-from pacmanengine.types.state import State
+from pacmanengine.types.position import Position
 
 
 class GhostType(enum.Enum):
@@ -42,7 +42,7 @@ class Ghost(Mob):
         move_up_gif: str,
         move_down_gif: str,
         action: Action,
-        state: State,
+        position: Position,
         agent: Agent | None = None,
     ) -> None:
         super(Ghost, self).__init__(
@@ -50,19 +50,19 @@ class Ghost(Mob):
             move_left_gif=move_left_gif,
             move_right_gif=move_right_gif,
             move_up_gif=move_up_gif,
-            state=state,
+            position=position,
             action=action,
             agent=agent,
         )
 
     @classmethod
-    def create(cls, state: State, action: Action, ghost_type: GhostType) -> Ghost:
+    def create(cls, position: Position, action: Action, ghost_type: GhostType) -> Ghost:
         """Instantiates a Ghost with the specific type.
 
         Parameters
         ----------
-        state : State
-            Initial state of the ghost.
+        position : Position
+            Initial position of the ghost.
         action : Action
             Initial action the ghost should take.
         ghost_type : GhostType
@@ -74,8 +74,9 @@ class Ghost(Mob):
             Ghost of the specific type.
         """
         return cls(
-            state=state,
+            position=position,
             action=action,
+            agent=_ghost_type_to_agent_type[ghost_type](),
             move_right_gif=(
                 f"animations:mobs/ghost/{ghost_type.value}/ghost_move_right.gif"
             ),
@@ -86,5 +87,4 @@ class Ghost(Mob):
             move_down_gif=(
                 f"animations:mobs/ghost/{ghost_type.value}/ghost_move_down.gif"
             ),
-            agent=_ghost_type_to_agent_type[ghost_type](),
         )
