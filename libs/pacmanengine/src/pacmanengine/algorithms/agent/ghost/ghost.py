@@ -122,7 +122,9 @@ class GhostAgent(Agent):
         return Action.STAY
 
     def action(self, starting_state: State, maze_state: MazeState) -> Action:
-        ending_state = self.choose_ending_state(maze_state=maze_state)
+        ending_state = self.choose_ending_state(
+            ghost_state=starting_state, maze_state=maze_state
+        )
         next_state = self.choose_next_state(
             current_state=starting_state, ending_state=ending_state
         )
