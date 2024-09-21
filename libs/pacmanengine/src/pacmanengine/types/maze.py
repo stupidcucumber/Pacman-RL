@@ -353,4 +353,5 @@ class Maze:
             pacman_state=self.pacman.current_state,
             score=self.score,
             hearts=self.hearts,
+            layout=self.layout,
         )

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import numpy as np
 from pacmanengine.types.state import State
 
 
@@ -24,3 +25,4 @@ class MazeState:
     pacman_state: State
     score: int
     hearts: int
+    layout: np.ndarray

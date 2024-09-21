@@ -1,10 +1,10 @@
-from pacmanengine.algorithms.agent.agent import Agent
+from pacmanengine.algorithms.agent.ghost.ghost import GhostAgent
 from pacmanengine.types.maze_state import MazeState
-from pacmanengine.types.mobs import Action
+from pacmanengine.types.state import State
 
 
-class BlinkyAgent(Agent):
+class BlinkyAgent(GhostAgent):
     """Agent for Blinky ghost (the red one)."""
 
-    def action(self, maze_state: MazeState) -> Action:
-        return super().action(maze_state)
+    def choose_ending_state(self, maze_state: MazeState) -> State:
+        return super().choose_ending_state()
