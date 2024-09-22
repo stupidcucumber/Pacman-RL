@@ -11,18 +11,23 @@ class MazeState:
 
     Attributes
     ----------
-    ghost_positions: list[Position]
+    ghost_positions : list[Position]
         Positions of the individual ghosts.
-    pacman_position: Position
+    pacman_position : Position
         Position of the pacman.
-    score: int
+    score : int
         Score achieved on the current step.
-    hearts: int
+    hearts : int
         Hearts left on the current step.
+    level : int
+        Level of the maze.
+    layout : np.ndarray
+        Numerical representation of the Maze.
     """
 
     ghost_positions: list[Position]
     pacman_position: Position
     score: int
     hearts: int
+    level: int
     layout: np.ndarray

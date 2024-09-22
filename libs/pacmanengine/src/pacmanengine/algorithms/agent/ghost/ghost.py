@@ -3,6 +3,7 @@ from abc import abstractmethod
 import numpy as np
 from pacmanengine.algorithms.agent.agent import Agent
 from pacmanengine.algorithms.agent.ghost.a_star import a_star
+from pacmanengine.algorithms.agent.ghost.state import GhostState
 from pacmanengine.types.maze_state import MazeState
 from pacmanengine.types.mobs import Action
 from pacmanengine.types.position import Position
@@ -13,6 +14,27 @@ class GhostAgent(Agent):
     pathfinding algorithm.
     """
 
+    def __init__(self, state: GhostState, counter: int = 0) -> None:
+        super(GhostAgent, self).__init__()
+        self.state = state
+        self.counter = counter
+
+    def increment_counter(self) -> None:
+        """Increments steps counter by 1."""
+        self.counter += 1
+
+    def setGhostState(self, state: GhostState) -> None:
+        """Sets ghost state to the new value."""
+        self.state = state
+
+    @property
+    @abstractmethod
+    def home_position(self) -> Position:
+        """Home position of the ghost."""
+        raise NotImplementedError(
+            "This property needs to be implemented in the child class."
+        )
+
     @abstractmethod
     def choose_ending_position(
         self, ghost_position: Position, maze_state: MazeState
@@ -22,6 +44,8 @@ class GhostAgent(Agent):
 
         Parameters
         ----------
+        layout : np.ndarray
+            Layout of the maze.
         ghost_position : Position
             Current position of the agent's ghost.
         maze_state : MazeState
@@ -136,8 +160,11 @@ class GhostAgent(Agent):
             ghost_position=starting_position, maze_state=maze_state
         )
         next_position = self.choose_next_position(
-            current_position=starting_position, ending_position=ending_position
+            current_position=starting_position,
+            ending_position=ending_position,
+            layout=maze_state.layout,
         )
+        self.increment_counter()
         return self.position_to_action(
             current_position=starting_position, next_position=next_position
         )
