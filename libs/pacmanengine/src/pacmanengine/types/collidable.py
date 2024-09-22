@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Type
 
-from pacmanengine.types.state import State
+from pacmanengine.types.position import Position
 
 
 class Collidable:
@@ -10,27 +10,27 @@ class Collidable:
 
     Parameters
     ----------
-    state : State
-        Current state of the object.
+    position : Position
+        Current position of the object.
     """
 
-    def __init__(self, state: State) -> None:
+    def __init__(self, position: Position) -> None:
         self.on_collision_slots: dict[Type, Callable[[Collidable], bool]] = {}
-        self.on_state_changed_slot: Callable[[State], None]
+        self.on_position_changed_slot: Callable[[Position], None]
         self.on_destroy_slot: Callable[[], None]
 
-        self.previous_state = None
-        self.current_state = state
+        self.previous_position = None
+        self.current_position = position
 
-    def on_state_changed(self, slot: Callable[[State], None]) -> None:
-        """Set callback to be called when state have been changed.
+    def on_position_changed(self, slot: Callable[[Position], None]) -> None:
+        """Set callback to be called when position have been changed.
 
         Parameters
         ----------
-        slot : Callable[[State], None]
-            Function that accepts a new state.
+        slot : Callable[[Position], None]
+            Function that accepts a new position.
         """
-        self.on_state_changed_slot = slot
+        self.on_position_changed_slot = slot
 
     def on_collision(
         self, collidable_type: Type, slot: Callable[[Collidable], Any]
@@ -51,27 +51,27 @@ class Collidable:
 
         Parameters
         ----------
-        slot : Callable[[State], None]
+        slot : Callable[[], None]
             Function that accepts not Arguments.
         """
         self.on_destroy_slot = slot
 
-    def setState(self, state: State) -> None:
+    def setPosition(self, position: Position) -> None:
         """Sets the new state.
 
         Parameters
         ----------
-        state : State
-            The new state to be set. This will be placed instead of
-            self.current_state.
+        position : Position
+            The new position to be set. This will be placed instead of
+            self.current_position.
 
         Notes
         -----
-        Previous state will be equal to the current_state.
+        Previous position will be equal to the current_position.
         """
-        self.previous_state = self.current_state
-        self.current_state = state
-        self.on_state_changed_slot(state)
+        self.previous_position = self.current_position
+        self.current_position = position
+        self.on_position_changed_slot(position)
 
     def collision(self, other: Collidable) -> None:
         """Conducts a collision (being present on the same tile with

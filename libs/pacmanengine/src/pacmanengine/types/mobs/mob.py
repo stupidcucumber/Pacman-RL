@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from typing import Callable
 
+from pacmanengine.algorithms.agent.agent import Agent
 from pacmanengine.types.animated import Animated
 from pacmanengine.types.collidable import Collidable
 from pacmanengine.types.mobs.action import Action
-from pacmanengine.types.state import State
+from pacmanengine.types.position import Position
 
 
-class Mob(Animated, Collidable, ABC):
+class Mob(Animated, Collidable):
     """A class that represents a movable object.
 
     Parameters
@@ -22,8 +22,8 @@ class Mob(Animated, Collidable, ABC):
         GIF that will be shown when object moves up.
     move_down_gif: str
         GIF that will be shown when object moves down.
-    state: State
-        Initial state of the object (x, y).
+    position: Position
+        Initial position of the object (x, y).
     action: Action
         Action that is currently being taken.
 
@@ -42,15 +42,16 @@ class Mob(Animated, Collidable, ABC):
         move_left_gif: str,
         move_up_gif: str,
         move_down_gif: str,
-        state: State,
+        position: Position,
         action: Action,
+        agent: Agent | None = None,
     ) -> None:
         Animated.__init__(
             self,
             gif=move_right_gif,
         )
-        Collidable.__init__(self, state=state)
-        ABC.__init__(self)
+        Collidable.__init__(self, position=position)
+        self.agent = agent
 
         self.action_to_gif: dict[Action, str] = {
             Action.MOVE_UP: move_up_gif,
@@ -123,24 +124,29 @@ class Mob(Animated, Collidable, ABC):
         self.current_action = action
         self.on_action_changed_slot(action)
 
-    @abstractmethod
-    def action(self) -> Action:
-        """Takes an action based on the maze state."""
-        raise NotImplementedError("To use this method you need to implement it!")
-
-    def move(self, action: Action | None = None) -> None:
+    def move(self, maze_state, action: Action | None = None) -> None:
         """Method moves object around. You either can pass a
         specific actions (e.g. simulate an agent, play yourself), or desire
         to do an algorithm (like simulate behavior of the ghost.)
 
         Parameters
         ----------
+        maze_state : MazeState
+            State of the maze at the moment of movement.
         action : Action, optional
             Action to take on the current step. If not passed will
             fallback to the algorithmic action.
         """
-        if not action:
-            action = self.action()
+        if not action and not maze_state:
+            raise ValueError("You must pass either maze_state or the action!")
+
+        if not action and not self.agent:
+            raise ValueError("Agent of this mob have not been initialized!")
+
+        if not action and self.agent:
+            action = self.agent.action(
+                starting_position=self.current_position, maze_state=maze_state
+            )
 
         self.setAction(action)
 

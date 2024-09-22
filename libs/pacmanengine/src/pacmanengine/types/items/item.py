@@ -1,6 +1,6 @@
 from pacmanengine.types.animated import Animated
 from pacmanengine.types.collidable import Collidable
-from pacmanengine.types.state import State
+from pacmanengine.types.position import Position
 
 
 class Item(Animated, Collidable):
@@ -10,10 +10,10 @@ class Item(Animated, Collidable):
     ----------
     gif : str
         Path to the default gif to me dispayed.
-    initial_state : State
-        Initial state of the item.
+    initial_position : Position
+        Initial position of the item.
     """
 
-    def __init__(self, gif: str, initial_state: State) -> None:
+    def __init__(self, gif: str, initial_position: Position) -> None:
         Animated.__init__(self, gif=gif)
-        Collidable.__init__(self, state=initial_state)
+        Collidable.__init__(self, position=initial_position)
