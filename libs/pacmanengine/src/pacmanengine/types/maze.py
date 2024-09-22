@@ -80,11 +80,12 @@ class Maze:
         Shape of the maze.
     """
 
-    def __init__(self, shape: tuple[int, int]) -> None:
+    def __init__(self, shape: tuple[int, int], level: int = 1) -> None:
         self.ghosts: list[Ghost] = []
         self.pacman: Pacman | None = None
         self.score: int = 0
         self.hearts: int = 3
+        self.level: int = level
 
         self.layout = generate_pacmanlike_maze(shape=shape)
         self.nrows = self.layout.shape[0]
@@ -357,4 +358,5 @@ class Maze:
             score=self.score,
             hearts=self.hearts,
             layout=self.layout,
+            level=self.level,
         )
