@@ -10,14 +10,15 @@ version = "0.0.1"
 authors = [
     {name="Ihor Kostiuk", email="ihor.kostiuk@knu.ua"}
 ]
-description = "An implementation of RL algorithm for Pacman."
+description = "An implementation of Agent algorithms for Pacman."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "numpy==1.26.4",
-    "pacmanengine"
+    "numpy",
+    "pacmanengine",
+    "keyboard"
 ]

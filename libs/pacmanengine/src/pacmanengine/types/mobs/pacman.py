@@ -1,3 +1,4 @@
+from pacmanengine.algorithms.agent.agent import Agent
 from pacmanengine.types.mobs.action import Action
 from pacmanengine.types.mobs.mob import Mob
 from pacmanengine.types.position import Position
@@ -8,6 +9,7 @@ class Pacman(Mob):
         self,
         position: Position,
         action: Action,
+        agent: Agent,
         move_right_gif: str = "animations:mobs/pacman/pacman_move_right.gif",
         move_left_gif: str = "animations:mobs/pacman/pacman_move_left.gif",
         move_up_gif: str = "animations:mobs/pacman/pacman_move_up.gif",
@@ -20,4 +22,5 @@ class Pacman(Mob):
             move_up_gif=move_up_gif,
             position=position,
             action=action,
+            agent=agent,
         )

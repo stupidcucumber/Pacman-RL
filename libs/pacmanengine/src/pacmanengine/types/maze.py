@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
+from pacmanagent.agent import PacmanAgent
 from pacmanengine.algorithms.maze import generate_pacmanlike_maze
 from pacmanengine.algorithms.maze.types import EntityWeight
 from pacmanengine.types.collidable import Collidable
@@ -241,7 +242,7 @@ class Maze:
         Pacman
             Mob with default movement callbacks already assigned.
         """
-        pacman = Pacman(position=initial_position, action=action)
+        pacman = Pacman(position=initial_position, action=action, agent=PacmanAgent())
         self._initialize_movement_callbacks(pacman)
         pacman.on_collision(Coin, lambda other: self.consume_coin(coin=other))
         pacman.on_collision(Ghost, lambda _: self.setHearts(self.hearts - 1))

@@ -14,18 +14,20 @@ class Mob(Animated, Collidable):
 
     Parameters
     ----------
-    move_right_gif: str
+    move_right_gif : str
         GIF that will be shown when object moves right.
-    move_left_gif: str
+    move_left_gif : str
         GIF that will be shown when object moves left.
-    move_up_gif: str
+    move_up_gif : str
         GIF that will be shown when object moves up.
-    move_down_gif: str
+    move_down_gif : str
         GIF that will be shown when object moves down.
-    position: Position
+    position : Position
         Initial position of the object (x, y).
-    action: Action
+    action : Action
         Action that is currently being taken.
+    agent : Agent
+        Agent that controlls mob.
 
     Notes
     -----
